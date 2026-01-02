@@ -28,10 +28,16 @@ Ce projet analyse la demande et la production énergétique. Voici les conclusio
 ### 1. Pourquoi l’ordre temporel est critique
 Dans les séries temporelles, le temps n'est pas une donnée ordinaire, c'est une information structurelle. Par exemple, il est possible de prédire la valeur à 12h en utilisant les données de 10h et 11h. Le modèle apprend ainsi la tendance (trend) et la saisonnalité (seasonality).
 
-### 2. Pourquoi on ne mélange pas les données (pas de shuffle)
+### 2. Pourquoi la normalisation est indispensable en Deep Learning
+La normalisation met les données sur la même échelle. Elle aide le modèle à apprendre plus vite, rend l’entraînement plus stable et améliore la performance du réseau.
+
+### 3. Pourquoi MinMax est souvent préféré à StandardScaler pour LSTM
+MinMax met les données entre 0 et 1, ce qui convient bien aux LSTM car ils utilisent des fonctions d’activation comme sigmoid et tanh. StandardScaler peut produire des valeurs trop grandes, ce qui peut rendre l’apprentissage plus difficile pour les LSTM.
+
+### 4. Pourquoi on ne mélange pas les données (pas de shuffle)
 En Machine Learning classique, on utilise train_test_split avec un mélange aléatoire (shuffle). Mais dans les séries temporelles, c'est une catastrophe : si on mélange les données, on peut se retrouver avec des données de 2023 dans l'entraînement et des données de 2021 dans le test. Le modèle s'entraîne alors sur le futur pour prédire le passé, ce qui est impossible en conditions réelles.
 
-### 3.  Pourquoi un LSTM attend des données en 3D et Signification de la forme : (samples, timesteps, features)
+### 5.  Pourquoi un LSTM attend des données en 3D et Signification de la forme : (samples, timesteps, features)
 Contrairement à la Régression Linéaire ou au Random Forest, le LSTM est conçu pour les séquences. Il nécessite des données structurées selon 3 dimensions :
 
     Samples : Le nombre d'exemples d'entraînement (ex: 10 000).
@@ -41,6 +47,18 @@ Contrairement à la Régression Linéaire ou au Random Forest, le LSTM est conç
     Features : Le nombre de variables par pas de temps (ex: 7 sources d'énergie).
 
     La forme de l'entrée est donc (Samples, Timesteps, Features).
+
 1. Mémoire interne : Le LSTM possède des "portes" (gates) qui décident quelle information de l'Heure -24 est encore importante lorsqu'il arrive à l'Heure -1.
 2. Relations multi-variables : Il ne regarde pas seulement le solaire ou l'éolien séparément, mais comment les 7 énergies interagissent entre elles sur une durée de 24h.
 
+### 6. Pourquoi on ne fait pas de traintestsplit classique
+On ne fait pas un train-test split classique parce que, dans les séries temporelles, l’ordre du temps est important. Mélanger les données ferait apprendre au modèle des informations du futur, ce qui fausse les résultats.
+
+### 7. Risque de fuite de données temporelles
+La fuite de données temporelles se produit quand le modèle utilise des informations du futur pour l’entraînement. Cela donne de très bons résultats artificiels, mais le modèle échoue en conditions réelles car il n’a pas appris correctement.
+
+### 8. Impact du nombre d’unités LSTM
+Le nombre d’unités LSTM détermine la capacité du modèle. Trop peu d’unités → modèle trop simple. Trop d’unités → risque d’overfitting et temps d’entraînement plus long.
+
+### 9. Différence entre 1 ou plusieurs couches LSTM
+Une seule couche LSTM apprend des relations simples. Plusieurs couches LSTM permettent de capter des relations plus complexes, mais augmentent le risque d’overfitting et le coût de calcul.
